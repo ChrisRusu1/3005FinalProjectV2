@@ -246,6 +246,15 @@ def update_profile(member_id):
         conn.close()
 
 def update_fitness_goals(member_id):
+    """
+    Updates the fitness goals for a given member.
+
+    Args:
+        member_id (int): The ID of the member.
+
+    Returns:
+        None
+    """
     conn = connect_to_db()
     cursor = conn.cursor()
 
@@ -311,7 +320,7 @@ def select_and_update_goal(goals, cursor, conn):
         params.append(new_target_date)
     params.append(selected_goal[0])
 
-    if updates:
+    if updates: # Only execute the update query if there are updates to be made
         update_query = "UPDATE FitnessGoals SET " + ", ".join(updates) + " WHERE GoalID = %s"
         try:
             cursor.execute(update_query, params)
@@ -321,7 +330,7 @@ def select_and_update_goal(goals, cursor, conn):
             print("Error updating fitness goal:", error)
             conn.rollback()
 
-def select_and_mark_goal_as_achieved(goals, cursor, conn):
+def select_and_mark_goal_as_achieved(goals, cursor, conn): # Mark a fitness goal as achieved
     goal_selection = int(input("Select the number for the goal you want to mark as achieved: ")) - 1
     selected_goal = goals[goal_selection]
 
@@ -333,7 +342,7 @@ def select_and_mark_goal_as_achieved(goals, cursor, conn):
         print("Error marking fitness goal as achieved:", error)
         conn.rollback()
 
-def update_health_metrics(member_id):
+def update_health_metrics(member_id):# Update the health metrics for a given member
     conn = connect_to_db()
     cursor = conn.cursor()
 
@@ -345,7 +354,7 @@ def update_health_metrics(member_id):
         WHERE MemberID = %s
         ORDER BY Date DESC
         LIMIT 1
-        """, (member_id,))
+        """, (member_id,)) # Fetch the most recent health metrics
         latest_metrics = cursor.fetchone()
         if latest_metrics:
             print("\nMost recent health metrics:")
@@ -364,7 +373,7 @@ def update_health_metrics(member_id):
     heart_rate = int(input("Heart Rate (beats per minute): "))
     blood_pressure = input("Blood Pressure (systolic/diastolic): ")
 
-    try:
+    try: # Insert the new health metrics into the database
         query = """
         INSERT INTO HealthMetrics (MemberID, Date, Weight, HeartRate, BloodPressure)
         VALUES (%s, %s, %s, %s, %s)
@@ -378,7 +387,7 @@ def update_health_metrics(member_id):
         cursor.close()
         conn.close()
 
-def pay_bills(member_id):
+def pay_bills(member_id): # Pay all unpaid bills for a given member
     conn = connect_to_db()
     cursor = conn.cursor()
 
@@ -418,7 +427,7 @@ def pay_bills(member_id):
         cursor.close()
         conn.close()
 
-def dashboard_display(member_id):
+def dashboard_display(member_id): # Display the dashboard for a given member
     conn = connect_to_db()
     cursor = conn.cursor()
 
@@ -442,7 +451,7 @@ def dashboard_display(member_id):
 
 def view_exercise_routines(member_id, cursor):
     try:
-        cursor.execute("SELECT RoutineID, RoutineName, Description, DateCreated FROM ExerciseRoutines WHERE MemberID = %s ORDER BY DateCreated DESC", (member_id,))
+        cursor.execute("SELECT RoutineID, RoutineName, Description, DateCreated FROM ExerciseRoutines WHERE MemberID = %s ORDER BY DateCreated DESC", (member_id,)) #  Fetch all exercise routines for the member
         routines = cursor.fetchall()
         if routines:
             print("\nYour Exercise Routines:")
@@ -457,7 +466,7 @@ def view_exercise_routines(member_id, cursor):
         print("2. Delete Routine")
         print("3. Return to Dashboard")
         
-        choice = input("Enter option: ")
+        choice = input("Enter option: ") # Allow the user to add or delete exercise routines
         if choice == '1':
             add_exercise_routine(member_id, cursor)
         elif choice == '2':
@@ -470,21 +479,21 @@ def view_exercise_routines(member_id, cursor):
         print("Error retrieving exercise routines:", error)
 
 
-def add_exercise_routine(member_id, cursor):
+def add_exercise_routine(member_id, cursor): # Add a new exercise routine for a given member
     routine_name = input("Enter the name of the routine: ")
     description = input("Enter a description of the routine: ")
     date_created = datetime.date.today()  # Automatically capture the current date
 
     try:
         cursor.execute("INSERT INTO ExerciseRoutines (MemberID, RoutineName, Description, DateCreated) VALUES (%s, %s, %s, %s)",
-                       (member_id, routine_name, description, date_created))
+                       (member_id, routine_name, description, date_created)) # Insert the new exercise routine into the database
         cursor.connection.commit()
         print("Exercise routine added successfully!")
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error adding exercise routine:", error)
         cursor.connection.rollback()
 
-def delete_exercise_routine(cursor):
+def delete_exercise_routine(cursor): # Delete an exercise routine
     routine_id = input("Enter the ID of the routine to delete: ")
     try:
         cursor.execute("DELETE FROM ExerciseRoutines WHERE RoutineID = %s", (routine_id,))
@@ -494,12 +503,12 @@ def delete_exercise_routine(cursor):
         print("Error deleting exercise routine:", error)
         cursor.connection.rollback()
 
-def view_fitness_achievements(member_id):
+def view_fitness_achievements(member_id): # View fitness achievements for a given member
     conn = connect_to_db()
     cursor = conn.cursor()
 
     try:
-        cursor.execute("SELECT AchievementDescription, AchievementDate FROM FitnessAchievements WHERE MemberID = %s ORDER BY AchievementDate DESC", (member_id,))
+        cursor.execute("SELECT AchievementDescription, AchievementDate FROM FitnessAchievements WHERE MemberID = %s ORDER BY AchievementDate DESC", (member_id,)) # Fetch all fitness achievements for the member
         achievements = cursor.fetchall()
         if achievements:
             print("\nYour Fitness Achievements:")
@@ -513,7 +522,7 @@ def view_fitness_achievements(member_id):
         cursor.close()
         conn.close()
 
-def view_health_statistics(member_id):
+def view_health_statistics(member_id): # View health statistics for a given member
     conn = connect_to_db()
     cursor = conn.cursor()
 
@@ -566,7 +575,7 @@ def view_health_statistics(member_id):
 
 
 
-def schedule_management(member_id):
+def schedule_management(member_id): # Manage the schedule for a given member
     conn = connect_to_db()
     cursor = conn.cursor()
 
@@ -601,7 +610,7 @@ def view_schedule(member_id, cursor):
             JOIN ClassBookings b ON f.ClassID = b.ClassID
             WHERE b.MemberID = %s
             ORDER BY StartDateTime
-        """, (member_id, member_id))
+        """, (member_id, member_id)) # Fetch all upcoming sessions and classes for the member
         schedule = cursor.fetchall()
         if schedule:
             print("\nYour Upcoming Schedule:")
@@ -614,15 +623,15 @@ def view_schedule(member_id, cursor):
 
 
 
-def book_session_or_class(member_id, cursor, conn):
+def book_session_or_class(member_id, cursor, conn): # Book a session or class for a given
     print("\nBooking Options:")
     print("1. Book a Fitness Class")
     print("2. Book a Personal Training Session")
     choice = input("Enter option (1 or 2): ")
 
-    if choice == '1':
+    if choice == '1':# Book a fitness class
         # Retrieve the membership type of the member
-        cursor.execute("SELECT MembershipType FROM Members WHERE MemberID = %s", (member_id,))
+        cursor.execute("SELECT MembershipType FROM Members WHERE MemberID = %s", (member_id,)) # Fetch the membership type of the member
         membership_type = cursor.fetchone()[0]
 
         # Retrieve available classes not already booked by the member
@@ -635,7 +644,7 @@ def book_session_or_class(member_id, cursor, conn):
                 WHERE ClassBookings.ClassID = FitnessClasses.ClassID
                   AND ClassBookings.MemberID = %s
             )
-        """, (member_id,))
+        """, (member_id,)) # Fetch all available classes not already booked by the member
         classes = cursor.fetchall()
         if not classes:
             print("No available classes to book.")
@@ -643,21 +652,21 @@ def book_session_or_class(member_id, cursor, conn):
         print("\nAvailable Fitness Classes:")
         for cls in classes:
             cost_display = "Free" if membership_type == "Premium" else f"Cost: ${cls[2]}"
-            print(f"Class ID: {cls[0]}, Name: {cls[1]}, {cost_display}")
+            print(f"Class ID: {cls[0]}, Name: {cls[1]}, {cost_display}") 
 
         # Allow member to book a class
         class_id = input("Enter Class ID to book: ")
-        cursor.execute("INSERT INTO ClassBookings (ClassID, MemberID) VALUES (%s, %s)", (class_id, member_id))
+        cursor.execute("INSERT INTO ClassBookings (ClassID, MemberID) VALUES (%s, %s)", (class_id, member_id)) # Book the class for the member
         conn.commit()
         print("Fitness class booked successfully.")
     
-    elif choice == '2':
+    elif choice == '2':# Book a personal training session
         # Retrieve and display available personal training sessions
         cursor.execute("""
             SELECT SessionID, TrainerID, StartTime, EndTime
             FROM PersonalTrainingSessions
             WHERE MemberID IS NULL AND SessionStatus = 'Available'
-        """)
+        """) # Fetch all available personal training sessions
         sessions = cursor.fetchall()
         print("\nAvailable Personal Training Sessions:")
         for session in sessions:
@@ -669,7 +678,7 @@ def book_session_or_class(member_id, cursor, conn):
             UPDATE PersonalTrainingSessions
             SET MemberID = %s, SessionStatus = 'Booked'
             WHERE SessionID = %s
-        """, (member_id, session_id))
+        """, (member_id, session_id)) # Book the session for the member
         conn.commit()
         print("Personal training session booked successfully.")
 
@@ -679,14 +688,14 @@ def cancel_session_or_class(member_id, cursor, conn):
     print("2. Cancel a Personal Training Session")
     choice = input("Enter option (1 or 2): ")
 
-    if choice == '1':
+    if choice == '1':# Cancel a fitness class
         # Show the member their current class bookings
         cursor.execute("""
             SELECT b.BookingID, f.ClassName, f.ClassID
             FROM ClassBookings b
             JOIN FitnessClasses f ON b.ClassID = f.ClassID
             WHERE b.MemberID = %s
-        """, (member_id,))
+        """, (member_id,)) # Fetch all fitness classes booked by the member
         bookings = cursor.fetchall()
         if not bookings:
             print("You have no fitness classes to cancel.")
@@ -700,13 +709,13 @@ def cancel_session_or_class(member_id, cursor, conn):
         conn.commit()
         print("Fitness class booking cancelled successfully.")
 
-    elif choice == '2':
+    elif choice == '2': # Cancel a personal training session
         # Show the member their current personal training sessions
         cursor.execute("""
             SELECT SessionID, StartTime, TrainerID
             FROM PersonalTrainingSessions
             WHERE MemberID = %s AND SessionStatus = 'Booked'
-        """, (member_id,))
+        """, (member_id,)) # Fetch all personal training sessions booked by the member
         sessions = cursor.fetchall()
         if not sessions:
             print("You have no personal training sessions to cancel.")
@@ -720,7 +729,7 @@ def cancel_session_or_class(member_id, cursor, conn):
             UPDATE PersonalTrainingSessions
             SET MemberID = NULL, SessionStatus = 'Available'
             WHERE SessionID = %s AND MemberID = %s
-        """, (session_id, member_id))
+        """, (session_id, member_id))# Cancel the session for the member
         conn.commit()
         print("Personal training session cancelled successfully.")
 
@@ -729,7 +738,7 @@ def cancel_session_or_class(member_id, cursor, conn):
 
 
 #TRAINER FUNCTIONS
-def trainer_login():
+def trainer_login():# Login for a trainer
     conn = connect_to_db()
     cursor = conn.cursor()
 
@@ -744,7 +753,7 @@ def trainer_login():
             SELECT EmployeeID, Name
             FROM Employees
             WHERE Name = %s AND Password = %s AND Type = 'Trainer'
-        """, (name, encrypted_password))
+        """, (name, encrypted_password)) # Fetch the trainer details
         result = cursor.fetchone()
         if result:
             print(f"\nWelcome {result[1]}!")
@@ -776,7 +785,7 @@ def trainer_menu(trainer_id):
         else:
             print("Invalid option. Please choose between 1-3.")
 
-def view_trainer_schedule(trainer_id):
+def view_trainer_schedule(trainer_id):# View the schedule for a given trainer
     conn = connect_to_db()
     cursor = conn.cursor()
     try:
@@ -785,7 +794,7 @@ def view_trainer_schedule(trainer_id):
             FROM PersonalTrainingSessions
             WHERE TrainerID = %s
             ORDER BY CASE WHEN SessionStatus = 'Available' THEN 1 ELSE 2 END, StartTime
-        """, (trainer_id,))
+        """, (trainer_id,)) # Fetch all personal training sessions for the trainer
         sessions = cursor.fetchall()
         if sessions:
             print("\nYour Scheduled Sessions:")
@@ -806,7 +815,7 @@ def view_trainer_schedule(trainer_id):
         cursor.close()
         conn.close()
 
-def manage_schedule_options(trainer_id, conn):
+def manage_schedule_options(trainer_id, conn): # Provide options to manage the trainer's schedule 
     print("Options: [1] Delete a Session, [2] Add New Session, [3] Return")
     choice = input("Enter option: ")
     if choice == '1':
@@ -824,7 +833,7 @@ def delete_session(trainer_id, conn):
         cursor.execute("""
             DELETE FROM PersonalTrainingSessions
             WHERE SessionID = %s AND TrainerID = %s
-        """, (session_id, trainer_id))
+        """, (session_id, trainer_id))# Delete the session
         conn.commit()
         print("Session deleted successfully.")
     except (Exception, psycopg2.DatabaseError) as error:
@@ -840,7 +849,7 @@ def add_session(trainer_id, conn):
         cursor.execute("""
             INSERT INTO PersonalTrainingSessions (TrainerID, StartTime, EndTime, SessionStatus)
             VALUES (%s, %s, %s, 'Available')
-        """, (trainer_id, start_time, end_time))
+        """, (trainer_id, start_time, end_time)) # Add a new session
         conn.commit()
         print("New session added successfully.")
     except (Exception, psycopg2.DatabaseError) as error:
@@ -864,9 +873,9 @@ def manage_member_profiles(trainer_id):
             AND h.Date = (
                 SELECT MAX(Date) FROM HealthMetrics WHERE MemberID = m.MemberID
             )
-        """, (trainer_id,))
+        """, (trainer_id,)) # Fetch all members assigned to the trainer
         members = cursor.fetchall()
-        if members:
+        if members: # Display the members and their latest health metrics
             print("\nMembers under your training with latest health metrics:")
             for member in members:
                 print(f"Member ID: {member[0]}, Name: {member[1]}, Membership Type: {member[2]}, Latest Metrics Date: {member[3]}, Weight: {member[4]}, Heart Rate: {member[5]}, Blood Pressure: {member[6]}")
@@ -880,7 +889,7 @@ def manage_member_profiles(trainer_id):
         cursor.close()
         conn.close()
 
-def add_achievement_option(cursor, conn):
+def add_achievement_option(cursor, conn): # Provide option to add fitness achievements for a member
     print("Do you want to add a fitness achievement for a member? (yes/no): ")
     if input().lower() == 'yes':
         member_id = input("Enter the Member ID to add achievement for: ")
@@ -890,7 +899,7 @@ def add_achievement_option(cursor, conn):
             cursor.execute("""
                 INSERT INTO FitnessAchievements (MemberID, AchievementDescription, AchievementDate)
                 VALUES (%s, %s, %s)
-            """, (member_id, description, achievement_date))
+            """, (member_id, description, achievement_date)) # Add the fitness achievement
             conn.commit()
             print("Fitness achievement added successfully.")
         except (Exception, psycopg2.DatabaseError) as error:
@@ -901,7 +910,7 @@ def add_achievement_option(cursor, conn):
 
 
 #ADMIN FUNCTIONS
-def admin_login():
+def admin_login():# Login for an admin
     conn = connect_to_db()
     cursor = conn.cursor()
 
@@ -986,7 +995,7 @@ def view_current_bookings(cursor):
         SELECT f.ClassID, f.ClassName, r.RoomName, f.StartTime, f.EndTime
         FROM FitnessClasses f
         JOIN Rooms r ON f.RoomID = r.RoomID
-    """)
+    """) # Fetch all fitness classes
     classes = cursor.fetchall()
     print("\nFitness Classes:")
     for cls in classes:
@@ -998,7 +1007,7 @@ def view_current_bookings(cursor):
         FROM PersonalTrainingSessions p
         JOIN Rooms r ON p.RoomID = r.RoomID
         JOIN Employees e ON p.TrainerID = e.EmployeeID
-    """)
+    """) # Fetch all personal training sessions
     sessions = cursor.fetchall()
     print("\nPersonal Training Sessions:")
     for session in sessions:
@@ -1024,21 +1033,21 @@ def add_new_booking(cursor, conn):
         cursor.execute("""
             INSERT INTO PersonalTrainingSessions (TrainerID, RoomID, StartTime, EndTime, SessionStatus)
             VALUES (%s, %s, %s, %s, 'Available')
-        """, (trainer_id, room_id, start_time, end_time))
+        """, (trainer_id, room_id, start_time, end_time)) # Add a new session
     else:
         print("Invalid booking type entered.")
         return
     conn.commit()
     print("New booking added successfully.")
 
-def delete_booking(cursor, conn):
+def delete_booking(cursor, conn): # Delete a booking for a room
     # This function will delete bookings based on input
     booking_type = input("Is this booking for a class or session? (class/session): ")
     booking_id = input("Enter an ID to delete: ")
     if booking_type.lower() == 'class':
-        cursor.execute("DELETE FROM FitnessClasses WHERE ClassID = %s", (booking_id,))
+        cursor.execute("DELETE FROM FitnessClasses WHERE ClassID = %s", (booking_id,)) # Delete the class
     elif booking_type.lower() == 'session':
-        cursor.execute("DELETE FROM PersonalTrainingSessions WHERE SessionID = %s", (booking_id,))
+        cursor.execute("DELETE FROM PersonalTrainingSessions WHERE SessionID = %s", (booking_id,)) # Delete the session
     else:
         print("Invalid booking type entered.")
         return
@@ -1073,7 +1082,7 @@ def view_equipment_status(cursor):
         SELECT EquipmentID, EquipmentType, LastMaintenanceDate, RoomID
         FROM Equipment
         ORDER BY LastMaintenanceDate
-    """)
+    """) # Fetch all equipment
     equipment = cursor.fetchall()
     if equipment:
         for item in equipment:
@@ -1089,7 +1098,7 @@ def update_maintenance_record(cursor, conn):
             UPDATE Equipment
             SET LastMaintenanceDate = %s
             WHERE EquipmentID = %s
-        """, (new_maintenance_date, equipment_id))
+        """, (new_maintenance_date, equipment_id)) # Update the maintenance record
         conn.commit()
         print("Maintenance record updated successfully.")
     except (Exception, psycopg2.DatabaseError) as error:
@@ -1129,7 +1138,7 @@ def view_class_schedule(cursor):
         SELECT ClassID, ClassName, TrainerID, RoomID, StartTime, EndTime, Cost
         FROM FitnessClasses
         ORDER BY StartTime
-    """)
+    """) # Fetch all fitness classes
     classes = cursor.fetchall()
     if classes:
         for cls in classes:
@@ -1148,7 +1157,7 @@ def add_new_class(cursor, conn):
         cursor.execute("""
             INSERT INTO FitnessClasses (ClassName, TrainerID, RoomID, StartTime, EndTime, Cost)
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, (class_name, trainer_id, room_id, start_time, end_time, cost))
+        """, (class_name, trainer_id, room_id, start_time, end_time, cost)) # Add a new class
         conn.commit()
         print("New class added successfully.")
     except (Exception, psycopg2.DatabaseError) as error:
@@ -1161,7 +1170,7 @@ def update_existing_class(cursor, conn):
         SELECT ClassID, ClassName, TrainerID, RoomID, StartTime, EndTime, Cost
         FROM FitnessClasses
         ORDER BY StartTime
-    """)
+    """) # Fetch all fitness classes
     classes = cursor.fetchall()
     if not classes:
         print("No classes available to update.")
@@ -1178,7 +1187,7 @@ def update_existing_class(cursor, conn):
         SELECT ClassName, StartTime, EndTime, Cost
         FROM FitnessClasses
         WHERE ClassID = %s
-    """, (class_id,))
+    """, (class_id,)) # Fetch the specific class details
     class_info = cursor.fetchone()
     if not class_info:
         print("Class not found.")
@@ -1209,7 +1218,7 @@ def update_existing_class(cursor, conn):
         params.append(new_cost)
     params.append(class_id)
 
-    if updates:
+    if updates: # If there are updates to be made
         update_query = "UPDATE FitnessClasses SET " + ", ".join(updates) + " WHERE ClassID = %s"
         try:
             cursor.execute(update_query, params)
@@ -1243,7 +1252,7 @@ def delete_class(cursor, conn):
         # Roll back any changes if error occurs
         conn.rollback()
 
-def process_payments():
+def process_payments(): # Process payments for outstanding bills and payroll
     conn = connect_to_db()
     cursor = conn.cursor()
     while True:
@@ -1265,7 +1274,7 @@ def process_payments():
     cursor.close()
     conn.close()
 
-def view_member_outstanding_bills(cursor):
+def view_member_outstanding_bills(cursor): # View outstanding bills for members
     print("\nOutstanding Member Bills:")
     cursor.execute("""
         SELECT m.MemberID, m.Name, p.PaymentID, p.Date, p.Amount, p.Status
@@ -1273,7 +1282,7 @@ def view_member_outstanding_bills(cursor):
         JOIN Payments p ON m.MemberID = p.MemberID
         WHERE p.Status = 'Unpaid'
         ORDER BY p.Date
-    """)
+    """) # Fetch all outstanding bills
     bills = cursor.fetchall()
     if bills:
         for bill in bills:
@@ -1281,7 +1290,7 @@ def view_member_outstanding_bills(cursor):
     else:
         print("No outstanding bills.")
 
-def manage_payroll(cursor, conn):
+def manage_payroll(cursor, conn): # Manage payroll for employees
     print("\nPayroll Management:")
     cursor.execute("""
         SELECT Employees.EmployeeID, Employees.Name, Employees.Salary, PayrollPayments.PayrollID,
@@ -1290,7 +1299,7 @@ def manage_payroll(cursor, conn):
         JOIN PayrollPayments ON Employees.EmployeeID = PayrollPayments.EmployeeID
         WHERE PayrollPayments.Status = 'Unpaid'
         ORDER BY PayrollPayments.PaymentDate
-    """)
+    """) # Fetch all unpaid payroll data
     payroll = cursor.fetchall()
     print("Payroll Details for Unpaid Staff:")
     if payroll:
